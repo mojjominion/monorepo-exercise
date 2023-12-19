@@ -1,28 +1,27 @@
-import fp from "fastify";
-import postgres from "@fastify/postgres";
+import { fastifyInstance } from "./server";
 
-const fastify = fp();
-fastify.register(postgres, {
-  connectionString: "postgres://postgres@localhost",
-});
+fastifyInstance.get<FruitRoute>("/fruit", async (req, reply) => {
+  let frutis: Fruit[] | null = null;
+  // Query Fruits
+  try {
+    const { rows } = await fastifyInstance.dbClient.query<Fruit>(
+      "SELECT id, name, addedBy FROM fruits WHERE id=$1",
+      [req.query.id],
+    );
+    frutis = rows;
+  } catch (error) {
+    console.log("DB Error: ", error);
+  }
 
-fastify.listen({ port: 8082 }, (err: any) => {
-  if (err) throw err;
-  console.log(`server listening on ${8082}`);
-});
+  if (!frutis?.length) {
+    return reply
+      .status(400)
+      .send({ data: null, error: `No fruit found for ID {${req.query.id}}` });
+  }
 
-fastify.get<FruitRoute>("/fruit", async (req, reply) => {
-  fastify.pg.query<Fruit>(
-    "SELECT id, name, addedBy FROM fruits WHERE id=$1",
-    [req.query.id],
-    function onResult(err, result) {
-      if (err) {
-        throw reply.status(400).send({ error: err.message, data: null });
-      }
-      reply.status(200).send({ success: true, data: result.rows });
-    },
-  );
-  return reply;
+  const user = await fastifyInstance.USERS.fetchUser({ id: frutis[0].id });
+  frutis[0].addedBy = user?.[0]?.name ?? "NO_NAME";
+  reply.status(200).send({ success: true, data: frutis });
 });
 
 interface FruitRoute {
@@ -33,6 +32,7 @@ interface FruitRoute {
 interface Fruit {
   id: string;
   name: string;
+  addedBy: string;
 }
 interface IQuerystring {
   id: string;
