@@ -1,10 +1,9 @@
 import fp from "fastify";
 import postgres from "@fastify/postgres";
+import { CONFIG } from "configs";
 
 const fastify = fp();
-fastify.register(postgres, {
-  connectionString: "postgres://postgres@localhost",
-});
+fastify.register(postgres, { connectionString: CONFIG.DB_URL });
 
 fastify.listen({ port: 8081 }, (err: any) => {
   if (err) throw err;
