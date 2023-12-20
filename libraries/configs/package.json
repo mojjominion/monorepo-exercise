@@ -2,10 +2,10 @@
   "name": "configs",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node index.js",
+    "start": "node build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "pnpm build; pnpm start"
   },
